@@ -23,8 +23,8 @@ def read_words(filename: str) -> dict:
     return Wdict
 
 def total_count(Dtotal: dict) -> dict:
-    count = 0
     for word in Dtotal:
+        count = 0
         for element in Dtotal[word].get('occur'):
             count += int(element)
         tempLet = Counter(word)
@@ -48,6 +48,8 @@ def letter_count(Dtotal: dict) -> None:
     for letter in d:
         d[letter] = d.get(letter)/total
 
+    print(total)
+
 def main() -> None:
 
     parser = argparse.ArgumentParser()
@@ -64,11 +66,9 @@ def main() -> None:
         Wdict = total_count(Wdict)
         letter_count(Wdict)
 
+    if args.output:
         for key in d:
             print(key, ':', d[key])
-
-    if args.output:
-        print('output')
     if args.plot:
         print('plot')
 
