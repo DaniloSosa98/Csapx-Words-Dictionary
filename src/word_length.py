@@ -2,6 +2,7 @@ import csv
 import argparse
 import sys
 from collections import namedtuple
+import matplotlib.pyplot as plt
 
 ERR = sys.stderr.write
 Word = namedtuple('Word', ('name', 'occur'))
@@ -53,10 +54,18 @@ def printL(Wdict:dict, start:str, end:str):
         print( '{}: {}'.format(current, Wdict[current]['average']) )
         i += 1
 
+def plotW(Wdict:dict, start:str, end:str, keyL: list, valueL: list):
+    i = 0
+    while i <= int(end) - int(start):
+        current = str(int(start) + i)
+        keyL.append(current)
+        valueL.append(Wdict[current]['average'])
+        i += 1
+
 
 def main() -> None:
 
-    global find, wordsL, Wdict
+    global find, wordsL, Wdict, keyL, valueL
     parser = argparse.ArgumentParser()
     parser.add_argument("-o","--output", action="store_true", help="display the average word lengths over years")
     parser.add_argument("-p","--plot", action="store_true", help="plot the average word lengths over years")
@@ -69,6 +78,8 @@ def main() -> None:
     if filename[-4:] != '.csv':
         ERR('Error: {} does not exist!\n\n'.format(args.filename))
     else:
+        keyL = []
+        valueL = []
         Wdict = read_words(filename)
         Wdict = store(Wdict)
         Wdict = avrg(Wdict)
@@ -82,7 +93,14 @@ def main() -> None:
             printL(Wdict, start, end)
 
     if args.plot:
-        print('plot')
+        start = args.start
+        end = args.end
+        plotW(Wdict, start, end, keyL, valueL)
+        plt.plot(keyL,valueL)
+        plt.title('Average word lengths from {} to {}: {}'.format(start, end, args.filename))
+        plt.xlabel('Year')
+        plt.ylabel('Average word length')
+        plt.show()
 
 if __name__ == '__main__':
     main()

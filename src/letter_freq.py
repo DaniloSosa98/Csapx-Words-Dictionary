@@ -3,6 +3,8 @@ import argparse
 import sys
 from collections import Counter
 import string
+import matplotlib.pyplot as plt
+import numpy as np
 
 ERR = sys.stderr.write
 d = dict.fromkeys(string.ascii_lowercase, 0)
@@ -36,7 +38,7 @@ def total_count(Dtotal: dict) -> dict:
 
     return Dtotal
 
-def letter_count(Dtotal: dict) -> None:
+def letter_count(Dtotal: dict, keyL: list, valueL: list) -> None:
     total = 0
     for word in Dtotal:
         for letter in Dtotal[word].get('letters'):
@@ -48,10 +50,13 @@ def letter_count(Dtotal: dict) -> None:
     for letter in d:
         d[letter] = d.get(letter)/total
 
-    print(total)
+    for letter in d:
+        keyL.append(letter)
+        valueL.append(d[letter])
 
 def main() -> None:
 
+    global keyL, valueL
     parser = argparse.ArgumentParser()
     parser.add_argument("-o","--output", action="store_true", help="display letter frequencies to standard output")
     parser.add_argument("-p","--plot", action="store_true", help="plot letter frequencies using matplotlib")
@@ -62,15 +67,24 @@ def main() -> None:
     if filename[-4:] != '.csv':
         ERR('Error: {} does not exist!\n\n'.format(args.filename))
     else:
+        keyL = []
+        valueL = []
         Wdict = read_words(filename)
         Wdict = total_count(Wdict)
-        letter_count(Wdict)
+        letter_count(Wdict, keyL, valueL)
 
     if args.output:
         for key in d:
             print(key, ':', d[key])
     if args.plot:
-        print('plot')
+        xpos = np.arange(len(keyL))
+        plt.bar(xpos, valueL)
+        plt.xticks(xpos, keyL)
+        plt.ylabel("Frequency")
+        plt.xlabel("Letter")
+        plt.title('Letter Frequencies: {}'.format(args.filename))
+        plt.show()
+
 
 if __name__ == '__main__':
     main()
