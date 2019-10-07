@@ -3,6 +3,8 @@ import argparse
 import sys
 from operator import attrgetter
 from collections import namedtuple
+import matplotlib.pyplot as plt
+
 
 ERR = sys.stderr.write
 Word = namedtuple('Word', ('name', 'occur'))
@@ -22,7 +24,7 @@ def read_words(filename: str) -> dict:
 
     return Wdict
 
-def word_occur(Dtotal: dict) -> dict:
+def word_occur(Dtotal: dict, find:str) -> dict:
     for word in Dtotal:
         count = 0
         for element in Dtotal[word].get('occur'):
@@ -30,7 +32,6 @@ def word_occur(Dtotal: dict) -> dict:
         Dtotal[word] = {'total': count}
 
         wordsL.append(Word(name = word, occur = count))
-
 
     return Dtotal
 
@@ -46,19 +47,28 @@ def Lranks(max: int):
     else:
         ERR('Index outside of range\n\n')
 
-def findW(wordsL: list, find: str, filename: str):
+def findW(wordsL: list, find: str, filename: str) -> int:
 
     rank = 0
     while rank < len(wordsL) and wordsL[rank].name != find:
         rank += 1
     if rank < len(wordsL):
         print('{} is ranked #{}'.format(find, rank + 1))
+        return rank+1
     else:
         ERR('Error: president does not appear in {}\n\n'.format(filename))
 
+    return rank + 1
+
+def plotL(wordsL: list, keyL:list, valueL:list):
+
+    for i in range(len(wordsL)):
+        keyL.append(i+1)
+        valueL.append(wordsL[i].occur)
+
 def main() -> None:
 
-    global find, wordsL
+    global find, wordsL, keyL, valueL, Wrank, Wdict, Wocur
     parser = argparse.ArgumentParser()
     parser.add_argument("-o","--output", type=int, help="display the top OUTPUT (#) ranked words by "
                                                                    "number of occurrences")
@@ -71,16 +81,29 @@ def main() -> None:
     if filename[-4:] != '.csv':
         ERR('Error: {} does not exist!\n\n'.format(args.filename))
     else:
-        Wdict = read_words(filename)
-        Wdict = word_occur(Wdict)
-        wordsL = order(Wdict)
+        Wocur  = 0
+        keyL = []
+        valueL = []
         find = args.word
+        Wdict = read_words(filename)
+        Wdict = word_occur(Wdict, find)
+        wordsL = order(Wdict)
+
     if args.word:
-        findW(wordsL, find, args.filename)
+        Wrank = findW(wordsL, find, args.filename)
     if args.output:
         Lranks(args.output)
     if args.plot:
-        print('plot')
+        plotL(wordsL, keyL, valueL)
+        plt.plot(keyL, valueL, 'k-o')
+        plt.xscale("log")
+        plt.yscale("log")
+        plt.title('Word Frequencies: {}'.format(args.filename))
+        plt.xlabel('Rank of word ("{}" is rank {})'.format(find, Wrank))
+        plt.ylabel('Total number of occurrences')
+        plt.text(Wrank,Wdict[find].get('total'),'{}'.format(find))
+        plt.show()
+
 
 if __name__ == '__main__':
     main()
